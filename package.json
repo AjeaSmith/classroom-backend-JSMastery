@@ -7,9 +7,7 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "tsx watch src/index.ts",
 		"build": "tsc",
-		
 		"start": "node dist/index.js"
-
 	},
 	"keywords": [],
 	"author": "Ajea Smith",
@@ -17,14 +15,13 @@
 	"type": "module",
 	"dependencies": {
 		"@neondatabase/serverless": "^1.0.2",
-		"cors": "^2.8.5",
+		"cors": "^2.8.6",
 		"dotenv": "^17.2.3",
 		"drizzle-orm": "^0.45.1",
-		"express": "^5.2.1",
-		"i": "^0.3.7",
-		"npm": "^11.7.0"
+		"express": "^5.2.1"
 	},
 	"devDependencies": {
+		"@types/cors": "^2.8.19",
 		"@types/express": "^5.0.6",
 		"@types/node": "^25.0.9",
 		"drizzle-kit": "^0.31.8",
