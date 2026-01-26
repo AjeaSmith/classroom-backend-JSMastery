@@ -109,3 +109,51 @@ result ->
 `export type Department = typeof departments.$inferSelect;`
 `export type Subject = typeof subjects.$inferSelect;`
 This code ensures that the App types are in sync with Database types. It will auto generate types for you, based on your DB schema to avoid creating types yourself.
+
+**What does this code do?**
+
+```js
+const countResult = await db
+	.select({ count: sql < number > `count(*)` })
+	.from(subjects)
+	.leftJoin(departments, eq(subjects.departmentId, departments.id))
+	.where(whereClause);
+```
+
+This returns the total number of subject rows that match your filters — not the actual subjects.
+
+```js
+const totalCount = countResult[0]?.count ?? 0;
+```
+
+This extracts the number from `countResult`, If none it returns 0.
+
+```js
+const subjectsResult = await db
+	.select({
+		...getTableColumns(subjects),
+		department: { ...getTableColumns(departments) },
+	})
+	.from(subjects)
+	.leftJoin(departments, eq(subjects.departmentId, departments.id))
+	.where(whereClause)
+	.orderBy(desc(subjects.createdAt))
+	.limit(limitPerPage)
+	.offset(offset);
+```
+
+This query's for the subjects and the department and applies all filters/pagination. FYI without `leftJoin` the department data will not be included in the result.
+
+```js
+res.status(200).json({
+	data: subjectsResult,
+	pagination: {
+		total: totalCount,
+		page: currentPage,
+		limit: limitPerPage,
+		totalPages: Math.ceil(totalCount / limitPerPage),
+	},
+});
+```
+
+This lets us return the data in a  `{data: , pagination: {}}` format.
