@@ -5,10 +5,10 @@ import { db } from "..";
 
 const router = express.Router();
 
-// GET all subjects with optional search, filter and pagination
+// GET all Departments with optional search and pagination
 router.get("/", async (req, res) => {
 	try {
-		const { search, department, page = 1, limit = 10 } = req.query;
+		const { search, page = 1, limit = 10 } = req.query;
 
 		const currentPage = Math.max(1, +page);
 		const limitPerPage = Math.max(1, +limit);
@@ -22,14 +22,10 @@ router.get("/", async (req, res) => {
 		if (search) {
 			filterCondtions.push(
 				or(
-					ilike(subjects.name, `%${search}%`),
-					ilike(subjects.code, `%${search}%`),
+					ilike(departments.name, `%${search}%`),
+					ilike(departments.code, `%${search}%`),
 				),
 			);
-		}
-		// if department query exist, filter by department name
-		if (department) {
-			filterCondtions.push(ilike(departments.name, `%${department}%`));
 		}
 
 		// if there are filters, apply filter conditions in query
@@ -38,26 +34,26 @@ router.get("/", async (req, res) => {
 
 		const countResult = await db
 			.select({ count: sql<number>`count(*)` })
-			.from(subjects)
-			.leftJoin(departments, eq(subjects.departmentId, departments.id))
+			.from(departments)
 			.where(whereClause);
 
 		const totalCount = countResult[0]?.count ?? 0;
 
-		const subjectsResult = await db
+		const departmentsList = await db
 			.select({
-				...getTableColumns(subjects),
-				department: { ...getTableColumns(departments) },
+				...getTableColumns(departments),
+				totalSubjects: sql<number>`count(${subjects.id})`,
 			})
-			.from(subjects)
-			.leftJoin(departments, eq(subjects.departmentId, departments.id))
+			.from(departments)
+			.leftJoin(subjects, eq(departments.id, subjects.departmentId))
 			.where(whereClause)
-			.orderBy(desc(subjects.createdAt))
+			.groupBy(departments.id)
+			.orderBy(desc(departments.createdAt))
 			.limit(limitPerPage)
 			.offset(offset);
 
 		res.status(200).json({
-			data: subjectsResult,
+			data: departmentsList,
 			pagination: {
 				total: totalCount,
 				page: currentPage,
@@ -66,8 +62,8 @@ router.get("/", async (req, res) => {
 			},
 		});
 	} catch (error) {
-		console.log("GET /subject error", error);
-		res.status(500).json({ error: error });
+		console.log("GET /departments error", error);
+		res.status(500).json({ error: "Failed to fetch departments" });
 	}
 });
 
